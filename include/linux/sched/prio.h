@@ -15,8 +15,6 @@
 
 #define MAX_RT_PRIO		100
 
-#endif /* CONFIG_SCHED_MUQSS */
-
 #define MAX_PRIO		(MAX_RT_PRIO + NICE_WIDTH)
 #define DEFAULT_PRIO		(MAX_RT_PRIO + NICE_WIDTH / 2)
 
