@@ -585,40 +585,6 @@ sas_domain_attach_transport(struct sas_domain_function_template *dft)
 }
 EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
 
-struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy,
-				      gfp_t gfp_flags)
-{
-	struct asd_sas_event *event;
-	struct sas_ha_struct *sas_ha = phy->ha;
-	struct sas_internal *i =
-		to_sas_internal(sas_ha->core.shost->transportt);
-
-	event = kmem_cache_zalloc(sas_event_cache, gfp_flags);
-	if (!event)
-		return NULL;
-
-	atomic_inc(&phy->event_nr);
-
-	if (atomic_read(&phy->event_nr) > phy->ha->event_thres) {
-		if (i->dft->lldd_control_phy) {
-			if (cmpxchg(&phy->in_shutdown, 0, 1) == 0) {
-				pr_notice("The phy%d bursting events, shut it down.\n",
-					  phy->id);
-				sas_notify_phy_event(phy, PHYE_SHUTDOWN,
-						     gfp_flags);
-			}
-		} else {
-			/* Do not support PHY control, stop allocating events */
-			WARN_ONCE(1, "PHY control not supported.\n");
-			kmem_cache_free(sas_event_cache, event);
-			atomic_dec(&phy->event_nr);
-			event = NULL;
-		}
-	}
-
-	return event;
-}
-
 struct asd_sas_event *sas_alloc_event(struct asd_sas_phy *phy)
 {
 	return __sas_alloc_event(phy, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
